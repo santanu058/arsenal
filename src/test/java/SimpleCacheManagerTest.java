@@ -8,18 +8,18 @@ public class SimpleCacheManagerTest {
 
     @Test
     void testStore() {
-        cacheManager.store("dummyKey", "dummyValue");
-        Assertions.assertEquals(cacheManager.fetch("dummyKey"), "dummyValue");
+        cacheManager.put("dummyKey", "dummyValue");
+        Assertions.assertEquals(cacheManager.get("dummyKey"), "dummyValue");
     }
 
     @Test
     void testFetch() {
-        Assertions.assertNull(cacheManager.fetch("x"));
+        Assertions.assertNull(cacheManager.get("x"));
     }
 
     @Test
     void testCheckIfExists() {
-        cacheManager.store("dummyKey", "dummyValue");
+        cacheManager.put("dummyKey", "dummyValue");
         Assertions.assertTrue(cacheManager.checkIfKeyExists("dummyKey"));
     }
 }

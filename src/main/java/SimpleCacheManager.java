@@ -2,20 +2,26 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Singleton;
+import service.FallbackService;
 
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Singleton
 public class SimpleCacheManager<K, V> implements ICacheManager<K, V> {
 
-    LoadingCache<K, V> inMemCache;
+    private final LoadingCache<K, V> inMemCache;
+    private FallbackService<V> fallbackService;
+
 
     /**
      * Executes the operation with defined cacheSize and default expiry time of 1 hour.
      * @param cacheSize
      */
-    public SimpleCacheManager(int cacheSize) {
+    public SimpleCacheManager(int cacheSize, FallbackService<V> fallbackService) {
         inMemCache = CacheBuilder.newBuilder()
                 .maximumSize(cacheSize)
                 .expireAfterWrite(1, TimeUnit.HOURS)
@@ -26,14 +32,15 @@ public class SimpleCacheManager<K, V> implements ICacheManager<K, V> {
                                 return inMemCache.get(key);
                             }
                         });
+        this.fallbackService = fallbackService;
     }
 
     /**
-     * Executes the operation with defined cacheSize and set expiry time.
+     * Executes the operation with defined cacheSize and set expiry time( in minutes ).
      * @param cacheSize
      * @param expiryTime
      */
-    public SimpleCacheManager(int cacheSize, int expiryTime) {
+    public SimpleCacheManager(int cacheSize, int expiryTime, FallbackService<V> fallbackService) {
         inMemCache = CacheBuilder.newBuilder()
                 .maximumSize(cacheSize)
                 .expireAfterWrite(expiryTime, TimeUnit.MINUTES)
@@ -44,15 +51,17 @@ public class SimpleCacheManager<K, V> implements ICacheManager<K, V> {
                                 return inMemCache.get(key);
                             }
                         });
+        this.fallbackService = fallbackService;
     }
 
     /**
-     * Executes the operation with a trigger action on key removal from cache. Class can provided with custom implementation.
+     * Executes the operation with a trigger action on key removal from cache. Class can be provided with custom implementation.
      * @param cacheSize
      * @param expiryTime
      * @param keyRemovalListenerHook
      */
-    public SimpleCacheManager(int cacheSize, int expiryTime, KeyRemovalListenerHook<K, V> keyRemovalListenerHook) {
+    public SimpleCacheManager(int cacheSize, int expiryTime,
+                              KeyRemovalListenerHook<K, V> keyRemovalListenerHook, FallbackService<V> fallbackService) {
         inMemCache = CacheBuilder.newBuilder()
                 .maximumSize(cacheSize)
                 .expireAfterWrite(expiryTime, TimeUnit.MINUTES)
@@ -64,20 +73,53 @@ public class SimpleCacheManager<K, V> implements ICacheManager<K, V> {
                                 return inMemCache.get(key);
                             }
                         });
+        this.fallbackService = fallbackService;
     }
 
     @Override
-    public void store(K key, V value) {
+    public void put(K key, V value) {
         inMemCache.put(key, value);
     }
 
     @Override
-    public V fetch(K key) {
+    public V get(K key) {
+        if(inMemCache.getIfPresent(key) == null) {
+            put(key, fallbackService.get(String.valueOf(key)));
+        }
         return inMemCache.getIfPresent(key);
     }
 
     @Override
     public boolean checkIfKeyExists(K key) {
         return inMemCache.getIfPresent(key) != null;
+    }
+
+    @Override
+    public void multiPut(Map<K, V> keyValues) {
+        keyValues.forEach(inMemCache::put);
+    }
+
+    @Override
+    public Map<K, V> multiGet(List<K> keys) {
+        return keys.stream().collect(Collectors.toMap(k -> k, inMemCache::getIfPresent));
+    }
+
+    @Override
+    public boolean removeKey(K key) {
+        inMemCache.invalidate(key);
+        return true;
+    }
+
+    @Override
+    public boolean setIfNotExist(K key, V value, int ttlInSec) {
+        return false;
+    }
+
+    @Override
+    public void refreshCache() {
+        /**
+         * TO BE IMPLEMENTED
+         * Purpose is to reload the data to reinit the cache here
+         **/
     }
 }
