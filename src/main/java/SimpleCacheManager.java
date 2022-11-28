@@ -84,7 +84,8 @@ public class SimpleCacheManager<K, V> implements ICacheManager<K, V> {
     @Override
     public V get(K key) {
         if(inMemCache.getIfPresent(key) == null) {
-            put(key, fallbackService.get(String.valueOf(key)));
+            V result = fallbackService.get(String.valueOf(key));
+            if(result != null) put(key, result);
         }
         return inMemCache.getIfPresent(key);
     }
