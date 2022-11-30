@@ -1,17 +1,20 @@
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
+import com.github.benmanes.caffeine.cache.RemovalCause;
+import com.github.benmanes.caffeine.cache.RemovalListener;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Extend this class to provide your own custom listener hook which will get triggered when any key gets removed.
  * @param <K>
  * @param <V>
  */
+@Slf4j
 public abstract class KeyRemovalListenerHook<K, V> implements RemovalListener<K, V> {
 
-    public abstract void actionOnRemove();
+    public abstract void actionOnRemove(K key, V value);
 
     @Override
-    public void onRemoval(RemovalNotification<K, V> removalNotification) {
-        actionOnRemove();
+    public void onRemoval(K key, V value, RemovalCause removalCause) {
+        log.debug("Key " + key + " with value " + value + " removed due to " + removalCause.name() + " action");
+        actionOnRemove(key, value);
     }
 }

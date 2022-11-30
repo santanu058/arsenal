@@ -43,4 +43,18 @@ public class SimpleCacheManagerTest {
         cacheManager.put("dummyKey", "dummyValue");
         Assertions.assertTrue(cacheManager.checkIfKeyExists("dummyKey"));
     }
+
+    @Test
+    void testEvictionListenerHook() {
+        KeyRemovalListenerHook<String, String> keyRemovalListenerHook = new KeyRemovalListenerHook<String, String>() {
+            @Override
+            public void actionOnRemove(String key, String value) {
+                cacheManager.put("entryOnKeyRemoval", "true");
+            }
+        };
+        ICacheManager<String, String> cacheManagerTest = new SimpleCacheManager<>(10, 1, keyRemovalListenerHook, fallbackService);
+        cacheManagerTest.put("alice", "bob");
+        cacheManagerTest.removeKey("alice");
+        Assertions.assertNotNull(cacheManager.get("entryOnKeyRemoval"));
+    }
 }

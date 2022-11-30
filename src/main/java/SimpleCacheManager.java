@@ -1,6 +1,6 @@
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.CacheLoader;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.inject.Singleton;
 import service.FallbackService;
 
@@ -22,7 +22,7 @@ public class SimpleCacheManager<K, V> implements ICacheManager<K, V> {
      * @param cacheSize
      */
     public SimpleCacheManager(int cacheSize, FallbackService<V> fallbackService) {
-        inMemCache = CacheBuilder.newBuilder()
+        inMemCache = Caffeine.newBuilder()
                 .maximumSize(cacheSize)
                 .expireAfterWrite(1, TimeUnit.HOURS)
                 .build(
@@ -41,7 +41,7 @@ public class SimpleCacheManager<K, V> implements ICacheManager<K, V> {
      * @param expiryTime
      */
     public SimpleCacheManager(int cacheSize, int expiryTime, FallbackService<V> fallbackService) {
-        inMemCache = CacheBuilder.newBuilder()
+        inMemCache = Caffeine.newBuilder()
                 .maximumSize(cacheSize)
                 .expireAfterWrite(expiryTime, TimeUnit.MINUTES)
                 .build(
@@ -62,7 +62,7 @@ public class SimpleCacheManager<K, V> implements ICacheManager<K, V> {
      */
     public SimpleCacheManager(int cacheSize, int expiryTime,
                               KeyRemovalListenerHook<K, V> keyRemovalListenerHook, FallbackService<V> fallbackService) {
-        inMemCache = CacheBuilder.newBuilder()
+        inMemCache = Caffeine.newBuilder()
                 .maximumSize(cacheSize)
                 .expireAfterWrite(expiryTime, TimeUnit.MINUTES)
                 .removalListener(keyRemovalListenerHook)
