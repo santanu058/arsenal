@@ -3,10 +3,10 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.inject.Singleton;
 import service.FallbackService;
+import service.LocalCacheConfigs;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -19,35 +19,17 @@ public class SimpleCacheManager<K, V> implements ICacheManager<K, V> {
 
     /**
      * Executes the operation with defined cacheSize and default expiry time of 1 hour.
-     * @param cacheSize
+     * @param localCacheConfigs
+     * @param fallbackService
      */
-    public SimpleCacheManager(int cacheSize, FallbackService<V> fallbackService) {
+    public SimpleCacheManager(LocalCacheConfigs localCacheConfigs, FallbackService<V> fallbackService) {
         inMemCache = Caffeine.newBuilder()
-                .maximumSize(cacheSize)
-                .expireAfterWrite(1, TimeUnit.HOURS)
+                .maximumSize(localCacheConfigs.getCacheSize())
+                .expireAfterWrite(localCacheConfigs.getTtl(), TimeUnit.HOURS)
                 .build(
                         new CacheLoader<K, V>() {
                             @Override
-                            public V load(K key) throws ExecutionException {
-                                return inMemCache.get(key);
-                            }
-                        });
-        this.fallbackService = fallbackService;
-    }
-
-    /**
-     * Executes the operation with defined cacheSize and set expiry time( in minutes ).
-     * @param cacheSize
-     * @param expiryTime
-     */
-    public SimpleCacheManager(int cacheSize, int expiryTime, FallbackService<V> fallbackService) {
-        inMemCache = Caffeine.newBuilder()
-                .maximumSize(cacheSize)
-                .expireAfterWrite(expiryTime, TimeUnit.MINUTES)
-                .build(
-                        new CacheLoader<K, V>() {
-                            @Override
-                            public V load(K key) throws ExecutionException {
+                            public V load(K key) {
                                 return inMemCache.get(key);
                             }
                         });
@@ -56,20 +38,20 @@ public class SimpleCacheManager<K, V> implements ICacheManager<K, V> {
 
     /**
      * Executes the operation with a trigger action on key removal from cache. Class can be provided with custom implementation.
-     * @param cacheSize
-     * @param expiryTime
+     * @param localCacheConfigs
      * @param keyRemovalListenerHook
+     * @param fallbackService
      */
-    public SimpleCacheManager(int cacheSize, int expiryTime,
-                              KeyRemovalListenerHook<K, V> keyRemovalListenerHook, FallbackService<V> fallbackService) {
+    public SimpleCacheManager(LocalCacheConfigs localCacheConfigs, KeyRemovalListenerHook<K, V> keyRemovalListenerHook,
+                              FallbackService<V> fallbackService) {
         inMemCache = Caffeine.newBuilder()
-                .maximumSize(cacheSize)
-                .expireAfterWrite(expiryTime, TimeUnit.MINUTES)
+                .maximumSize(localCacheConfigs.getCacheSize())
+                .expireAfterWrite(localCacheConfigs.getExpiryTime(), TimeUnit.MINUTES)
                 .removalListener(keyRemovalListenerHook)
                 .build(
                         new CacheLoader<K, V>() {
                             @Override
-                            public V load(K key) throws ExecutionException {
+                            public V load(K key) {
                                 return inMemCache.get(key);
                             }
                         });

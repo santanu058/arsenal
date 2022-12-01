@@ -3,7 +3,8 @@ import com.github.benmanes.caffeine.cache.RemovalListener;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Extend this class to provide your own custom listener hook which will get triggered when any key gets removed.
+ * Extend this class to provide your own custom implementation(overriding actionOnRemove method) which will get triggered when any
+ * key gets evicted.
  * @param <K>
  * @param <V>
  */
