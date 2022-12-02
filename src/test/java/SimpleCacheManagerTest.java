@@ -2,6 +2,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import service.FallbackService;
+import service.LocalCacheConfigs;
 
 
 public class SimpleCacheManagerTest {
@@ -11,7 +12,7 @@ public class SimpleCacheManagerTest {
 
     public SimpleCacheManagerTest() {
         fallbackService = Mockito.mock(FallbackService.class);
-        cacheManager = new SimpleCacheManager<>(10, fallbackService);
+        cacheManager = new SimpleCacheManager<>(LocalCacheConfigs.builder().cacheSize(10).build(), fallbackService);
         Mockito.when(fallbackService.get("x")).thenReturn("DummyReturn");
     }
 
@@ -52,7 +53,11 @@ public class SimpleCacheManagerTest {
                 cacheManager.put("entryOnKeyRemoval", "true");
             }
         };
-        ICacheManager<String, String> cacheManagerTest = new SimpleCacheManager<>(10, 1, keyRemovalListenerHook, fallbackService);
+        LocalCacheConfigs localCacheConfigs = LocalCacheConfigs.builder()
+                .cacheSize(10)
+                .expiryTime(1)
+                .build();
+        ICacheManager<String, String> cacheManagerTest = new SimpleCacheManager<>(localCacheConfigs, keyRemovalListenerHook, fallbackService);
         cacheManagerTest.put("alice", "bob");
         cacheManagerTest.removeKey("alice");
         Assertions.assertNotNull(cacheManager.get("entryOnKeyRemoval"));
