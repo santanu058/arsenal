@@ -1,3 +1,5 @@
+package service;
+
 import java.util.List;
 import java.util.Map;
 
@@ -10,10 +12,19 @@ public interface ICacheManager<K, V> {
     void put(K key, V value);
 
     /**
+     * Interface API for storing data into the local cache
+     * @param key
+     * @param value
+     * @param ttl
+     */
+
+    void putWithTTL(K key, V value, int ttl);
+
+    /**
      * Interface API for fetching data from the local cache
      * @param key
      */
-    V get(K key);
+    V fetch(K key);
 
     /**
      * Interface API for checking if a key exists in the local cache

@@ -1,6 +1,6 @@
 package service;
 
-public abstract class FallbackService<V> {
-    public abstract V get(String key);
-
+public interface FallbackService<K, V> {
+    V getValue(K key);
+    boolean put(K key, V Value);
 }

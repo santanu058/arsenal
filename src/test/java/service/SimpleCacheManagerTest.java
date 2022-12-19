@@ -1,8 +1,8 @@
+package service;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import service.FallbackService;
-import service.LocalCacheConfigs;
 
 
 public class SimpleCacheManagerTest {
@@ -13,30 +13,30 @@ public class SimpleCacheManagerTest {
     public SimpleCacheManagerTest() {
         fallbackService = Mockito.mock(FallbackService.class);
         cacheManager = new SimpleCacheManager<>(LocalCacheConfigs.builder().cacheSize(10).build(), fallbackService);
-        Mockito.when(fallbackService.get("x")).thenReturn("DummyReturn");
+        Mockito.when(fallbackService.getValue("x")).thenReturn("DummyReturn");
     }
 
     @Test
     void testStore() {
         cacheManager.put("dummyKey", "dummyValue");
-        Assertions.assertEquals(cacheManager.get("dummyKey"), "dummyValue");
+        Assertions.assertEquals(cacheManager.fetch("dummyKey"), "dummyValue");
     }
 
     @Test
     void testFetchWithCacheHit() {
         cacheManager.put("x", "dummy");
-        Assertions.assertNotNull(cacheManager.get("x"));
+        Assertions.assertNotNull(cacheManager.fetch("x"));
     }
 
     @Test
     void testFetchWithCacheMiss() {
-        Assertions.assertNull(cacheManager.get("missingKey"));
+        Assertions.assertNull(cacheManager.fetch("missingKey"));
     }
 
     @Test
     void testFetchWithFetchOnCacheMiss() {
-        Assertions.assertEquals(cacheManager.get("x"), "DummyReturn");
-        Assertions.assertNotNull(cacheManager.get("x"));
+        Assertions.assertEquals(cacheManager.fetch("x"), "DummyReturn");
+        Assertions.assertNotNull(cacheManager.fetch("x"));
     }
 
     @Test
@@ -55,11 +55,11 @@ public class SimpleCacheManagerTest {
         };
         LocalCacheConfigs localCacheConfigs = LocalCacheConfigs.builder()
                 .cacheSize(10)
-                .expiryTime(1)
+                .ttl(1)
                 .build();
         ICacheManager<String, String> cacheManagerTest = new SimpleCacheManager<>(localCacheConfigs, keyRemovalListenerHook, fallbackService);
         cacheManagerTest.put("alice", "bob");
         cacheManagerTest.removeKey("alice");
-        Assertions.assertNotNull(cacheManager.get("entryOnKeyRemoval"));
+        Assertions.assertNotNull(cacheManager.fetch("entryOnKeyRemoval"));
     }
 }

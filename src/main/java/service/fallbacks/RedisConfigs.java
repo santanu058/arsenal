@@ -1,4 +1,4 @@
-package service.redis;
+package service.fallbacks;
 
 import lombok.Builder;
 import lombok.Getter;
